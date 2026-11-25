@@ -67,7 +67,7 @@ export default function Management({section,s,onBack,onServices,active,onConnect
     {!active ? <>{sub('连接 VPN 后可以读取订阅节点、测速和管理自定义规则。')}{buttons([btn('连接 VPN',onConnect,{preferred:true}),...(!nodes?[btn('视频服务',onServices)]:[])])}</> :
     view==='list'?<>
       {nodes?sub((data.selected?'手动选择':'自动选择')+'  ·  当前节点 '+(data.current||'正在读取'),true):sub('智能模式从上往下匹配。视频服务的指定线路优先。')}
-      {buttons(nodes?[btn('自动选择',()=>run('select',{Name:''}),{selected:data.selected==='',preferred:!selected}),data.job?btn('取消测速',()=>run('cancel')):btn('整组测延迟',()=>run('all'))]:
+      {buttons(nodes?[btn('自动选择',()=>run('select',{Name:''}),{selected:data.selected==='',preferred:!selected}),btn(data.job?'取消测速':'整组测延迟',()=>run(data.job?'cancel':'all'),{id:'group-test'})]:
         [btn('视频服务',onServices,{preferred:!selected}),btn('添加规则',openAdd)])}
       {Boolean(nodes&&data.notice)&&sub(data.notice)}
       <View style={{marginTop:8*s}}>{entries.slice(currentPage*pageSize,(currentPage+1)*pageSize).map((e,i)=>{
@@ -94,14 +94,16 @@ export default function Management({section,s,onBack,onServices,active,onConnect
        {sub(chosen.Name,true)}{sub('延迟  '+delayText(chosen.Latency)+'   '+when(chosen.Latency?.At))}
        {sub('下载  '+(chosen.Download?.At?(chosen.Download.Error||chosen.Download.Mbps.toFixed(1)+' Mbps'):'待测')+'   '+when(chosen.Download?.At))}
        {buttons([btn('使用此节点',()=>run('select',{Name:selected}),{preferred:true,selected:data.selected===selected}),
-         btn('测延迟',()=>run('latency',{Name:selected}),{disabled:!!data.job}),btn('测下载速度',()=>run('download',{Name:selected}),{disabled:!!data.job}),
-         ...(data.job?[btn('取消测速',()=>run('cancel'))]:[])])}
+         ...Object.entries({latency:'测延迟',download:'测下载速度'}).map(([op,label])=>
+           btn(data.job===op?'取消测速':label,()=>data.job===op?run('cancel'):run(op,{Name:selected}),
+             {id:op,disabled:!!data.job&&data.job!==op})),
+         ...(data.job==='all'?[btn('取消测速',()=>run('cancel'))]:[])])}
        {sub(data.job?'测速中…':'下载测试访问 Cloudflare，单次最多 4 MiB。')}
     </>:<>
       {sub(sourceLabel(chosen),true)}{sub(kinds[chosen.Kind]+'  ·  '+(chosen.Enabled?'已启用':'已停用')+'  ·  '+(chosen.Target==='TV'?'代理':'直连'))}
       {chosen.Kind==='feed'&&sub(chosen.Format.toUpperCase()+'  ·  '+behaviors[chosen.Behavior]+'  ·  '+chosen.Count+' 条  ·  '+(data.updating?.[chosen.ID]?'正在更新':when(chosen.Updated)||'等待更新'))}
       {Boolean(chosen.Error)&&sub(chosen.Error)}
-      {buttons([btn(chosen.Enabled?'停用':'启用',()=>run('toggle',{ID:selected}),{preferred:true}),btn(chosen.Target==='TV'?'改为直连':'改为代理',()=>run('target',{ID:selected})),
+      {buttons([btn(chosen.Enabled?'停用':'启用',()=>run('toggle',{ID:selected}),{id:'enabled',preferred:true}),btn(chosen.Target==='TV'?'改为直连':'改为代理',()=>run('target',{ID:selected}),{id:'target'}),
         btn('上移',()=>run('move',{ID:selected,Step:-1}),{disabled:entries[0]?.ID===selected}),btn('下移',()=>run('move',{ID:selected,Step:1}),{disabled:entries[entries.length-1]?.ID===selected}),
         ...(chosen.Kind==='feed'?[btn('立即更新',()=>run('update',{ID:selected}))]:[]),btn('删除',()=>setView('delete'))])}
     </>}
