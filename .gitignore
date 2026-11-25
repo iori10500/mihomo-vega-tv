@@ -1,0 +1,11 @@
+node_modules/
+build/
+native/
+.measure-memory
+CMakeUserPresets.json
+buildinfo.json
+.watchman-cookie*
+*.vpkg
+*.log
+.env*
+.DS_Store

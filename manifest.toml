@@ -1,0 +1,51 @@
+schema-version = 1
+
+[package]
+id = "com.iori.mihomo"
+title = "Mihomo"
+version = "0.4.0"
+
+[os.version]
+min = "2.0"
+target = "2.0"
+
+[[components.interactive]]
+id = "com.iori.mihomo.main"
+runtime-module = "/com.amazon.kepler.keplerscript.runtime.loader_2@IKeplerScript_2_0"
+launch-type = "singleton"
+categories = ["com.amazon.category.main"]
+
+[[components.service]]
+id = "com.iori.mihomo.service"
+runtime-module = "/com.amazon.kepler.headless.runtime.loader_2@IKeplerScript_2_0"
+launch-type = "singleton"
+
+
+[[needs.module]]
+id = "/com.amazon.kepler.keplerscript_2@IKeplerScript_0"
+
+[[wants.service]]
+id = "com.amazon.network.service"
+
+[[wants.service]]
+id = "com.amazon.inputmethod.service"
+
+[[processes.group]]
+id = "ui"
+component-ids = ["com.iori.mihomo.main"]
+
+[[processes.group]]
+id = "proxy"
+component-ids = ["com.iori.mihomo.service"]
+
+[[wants.module]]
+id = "/com.amazon.kepler.net.vpn.vpnmanager@IVpnManager"
+
+[[needs.module]]
+id = "/com.amazon.kepler.security_manager_lib_1@ISecurityManagerLib_0"
+
+[[needs.privilege]]
+id = "com.amazon.network.privilege.net-vpn-ctrl"
+
+[[needs.privilege]]
+id = "com.amazon.network.privilege.network-access"

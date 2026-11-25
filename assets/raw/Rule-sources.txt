@@ -1,0 +1,9 @@
+Mihomo MRS data from https://github.com/MetaCubeX/meta-rules-dat/tree/ce616601064422e7acfe75ea201549dc7372becf
+SHA-256, local filename, upstream filename
+0b8c7c4d9773471991dd65737fdb16f3bf1baf2512c8b764d4c235318f01b7c6  cn-domain.mrs  geo/geosite/cn.mrs
+895fd8e055ce9b26c297571c5244c2a314a1e2184122bd3b83276be75e0befb1  cn-ip.mrs  geo/geoip/cn.mrs
+5f5329b62eb0f4f27d900f15b085e1d89dd01f21c2613835fbc76fcecf86e0b8  bilibili.mrs  geo/geosite/bilibili.mrs
+3e464e6a63daeb32b48578a69bd46486894fe8e13f7131f083a274f85822031b  iqiyi.mrs  geo/geosite/iqiyi.mrs
+bed7bfec11c6d9a81f04ce435bf65771c299c4ffe66c5fc0ce51b0ff25316121  youku.mrs  geo/geosite/youku.mrs
+e9ed06f27cd2a62d16b3f80d9c6905281a29d05563cb2c5138468cd5fa8c208c  hunantv.mrs  geo/geosite/hunantv.mrs
+Tencent Video domain reference: https://github.com/blackmatrix7/ios_rule_script/tree/master/rule/Clash/TencentVideo
