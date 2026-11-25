@@ -2,7 +2,8 @@ schema-version = 1
 
 [package]
 id = "com.iori.mihomo"
-title = "Mihomo"
+title = "Mihomo TV VPN"
+icon = "@image/mihomo-tv.png"
 version = "0.4.1"
 
 [os.version]

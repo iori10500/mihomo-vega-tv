@@ -54,4 +54,4 @@ vega device install-app -d DEVICE_SERIAL -p build/armv7-release/mihomo-tv_armv7.
 
 自有源码采用 GPL-3.0-only。核心来自 [MetaCubeX/mihomo](https://github.com/MetaCubeX/mihomo)，固定在 v1.19.34。服务和地区数据来自 [meta-rules-dat](https://github.com/MetaCubeX/meta-rules-dat)。规则文件的来源、固定版本和 SHA-256 见 [Rule-sources.txt](assets/raw/Rule-sources.txt)。腾讯视频规则使用视频服务的域名事实，参考来源列于同一文件。Amazon SDK 由开发者自行安装，遵循其许可条款。节点和规则订阅由使用者自行提供。
 
-商店构建的编号在 package.json 的 package:vega 脚本中设置。首次送审使用 1，后续上传的更新应递增。构建时将依赖声明打入 assets/raw/Third-party-notices.txt。
+商店构建的编号在 package.json 的 package:vega 脚本中设置。每次上传新安装包时递增。构建时将依赖声明打入 assets/raw/Third-party-notices.txt。
