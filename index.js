@@ -56,7 +56,9 @@ function App(){
       const needsService=()=>Core.requested()?Core.coreState()!=='running':Core.coreState()==='orphaned';
       if(!needsService())return;
       SecurityManager.getPrivilegeState(permission).then(x=>{
-        if(x==='ALLOW' && needsService())return Linking.openURL('pkg://com.iori.mihomo.service');
+        if(!needsService())return;
+        if(x==='ALLOW')return Linking.openURL('pkg://com.iori.mihomo.service');
+        if(Core.requested())setNote('请按确定键连接，并在电视提示中允许 VPN 连接');
       }).catch(e=>setNote(e.message));
     }
     resume();
@@ -164,7 +166,8 @@ function App(){
     </View>
     <View style={{flexDirection:'row'}}>
       <Tile s={s} preferred style={{flex:1,padding:32*s,marginRight:24*s,justifyContent:'space-between'}} action={()=>act(async()=>{
-        if(!configured){setEdit(true);return;}if(active||Core.requested())await disconnect();else await connect();
+        if(!configured){setEdit(true);return;}
+        if(Core.coreState()==='running')await disconnect();else await connect();
       })}>
         <View style={[row,{justifyContent:'space-between'}]}><Label size={26*s} color={dim}>系统 VPN · IPv4</Label><Power s={s} active={active}/></View>
         <View><Label size={65*s} bold>{networkStatus}</Label>
