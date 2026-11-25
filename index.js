@@ -18,7 +18,7 @@ function observations(raw){
   try{return JSON.parse(raw);}catch{return {};}
 }
 function routeName(route){return route==='direct'?'直连':route==='proxy'?'代理':'待观察';}
-const stateNames={running:'已连接',stopped:'已断开',starting:'正在连接',unconfigured:'等待订阅'};
+const stateNames={running:'已连接',stopped:'已断开',starting:'正在连接',recovering:'后台待恢复',orphaned:'后台已退出',unconfigured:'等待订阅'};
 function Label({children,size,color=white,bold=false,style}) {
   return <Text style={[{color,fontSize:size,fontWeight:bold?'700':'400'},style]}>{children}</Text>;
 }
@@ -53,9 +53,10 @@ function App(){
   useEffect(()=>{
     function resume() {
       refresh();
-      if(!Core.requested() || Core.coreState()==='running')return;
+      const needsService=()=>Core.requested()?Core.coreState()!=='running':Core.coreState()==='orphaned';
+      if(!needsService())return;
       SecurityManager.getPrivilegeState(permission).then(x=>{
-        if(x==='ALLOW' && Core.requested())return Linking.openURL('pkg://com.iori.mihomo.service');
+        if(x==='ALLOW' && needsService())return Linking.openURL('pkg://com.iori.mihomo.service');
       }).catch(e=>setNote(e.message));
     }
     resume();
@@ -69,8 +70,14 @@ function App(){
   function request(value){const err=Core.setRequested(value);if(err)throw Error(err);}
   async function disconnect(){
     request(false);
-    for(let i=0;i<35 && Core.coreState()==='running';i++)await pause(200);
-    if(Core.coreState()==='running')throw Error('后台尚未断开，请重试');
+    await Linking.openURL('pkg://com.iori.mihomo.service');
+    for(let i=0;i<40;i++){
+      const current=Core.coreState();
+      if(current==='stopped')return;
+      if(!['running','orphaned','starting'].includes(current))throw Error(stateNames[current]||current);
+      await pause(200);
+    }
+    throw Error('后台尚未断开，请重试');
   }
   async function connect(){
     let grant=await SecurityManager.getPrivilegeState(permission);
@@ -79,7 +86,7 @@ function App(){
     request(true);await Linking.openURL('pkg://com.iori.mihomo.service');
     for(let i=0;i<160;i++){
       const current=Core.coreState();if(current==='running')return;
-      if(!['starting','stopped'].includes(current))throw Error(stateNames[current]||current);
+      if(!['starting','stopped','recovering'].includes(current))throw Error(stateNames[current]||current);
       await pause(250);
     }
     throw Error('连接超时，请检查网络后重试');

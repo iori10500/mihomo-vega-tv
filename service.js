@@ -3,10 +3,14 @@ let endMeasure;
 import {HeadlessEntryPointRegistry} from '@amazon-devices/headless-task-manager';
 import Core from './src/NativeCore';
 let timer;
-let enabled = false;
+let enabled;
 function reconcile() {
   const wanted = Core.requested();
   if (wanted === enabled) return;
+  if (!wanted && enabled===undefined && Core.coreState()!=='orphaned') {
+    enabled=false;
+    return;
+  }
   const error = wanted ? Core.startCore() : Core.stopCore();
   if (error) {
     if (wanted) {
@@ -30,6 +34,6 @@ HeadlessEntryPointRegistry.registerHeadlessEntryPoint('com.iori.mihomo.service::
   clearInterval(timer);
   timer = null;
   if (enabled) Core.stopCore();
-  enabled = false;
+  enabled = undefined;
   return true;
 });

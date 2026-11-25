@@ -22,6 +22,7 @@ namespace {
 const std::string directory = "/data/iori-mihomo";
 const std::string config = directory + "/config.json";
 const std::string serviceState = directory + "/service-state";
+const std::string ownerFile = directory + "/vpn-peer.pub";
 const std::string candidate = directory + "/pending.json";
 std::mutex mutex;
 bool active = false;
@@ -189,7 +190,6 @@ std::string Core::startCore() {
     if (startLocal(localPrivate.data(),localPublic.data(),peerPublic.data())) {
         vpnError = "启动本地 WireGuard 转发失败";
     } else {
-        const auto ownerFile = directory + "/vpn-peer.pub";
         // 0.4.0 promoted config.json only after the first successful connection.
         const bool legacyProfile = access(ownerFile.c_str(), F_OK) != 0 && errno == ENOENT &&
                                    access(config.c_str(), R_OK) == 0;
@@ -222,6 +222,12 @@ std::string Core::stopCore() {
         if (!error.empty()) return error;
         stopLocal();
         stop();
+    } else if (readFile(serviceState) == "connected") {
+        const auto error = prepareSystemVpn(readFile(ownerFile), false);
+        if (!error.empty()) {
+            storeFile(serviceState, error);
+            return error;
+        }
     }
     active = false;
     return storeFile(serviceState, "disconnected");
@@ -230,9 +236,10 @@ std::string Core::coreState() {
     std::lock_guard<std::mutex> guard(mutex);
     if (access(config.c_str(),R_OK) && access(candidate.c_str(),R_OK)) return "unconfigured";
     const std::string actual = readFile(serviceState);
-    if (actual == "connected" && requested()) {
+    if (actual == "connected") {
+        const auto noBackend = requested() ? "recovering" : "orphaned";
         const int fd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
-        if (fd < 0) return "starting";
+        if (fd < 0) return noBackend;
         sockaddr_un address{};
         address.sun_family = AF_UNIX;
         const auto path=directory+"/vpn-ready.sock";
@@ -243,11 +250,9 @@ std::string Core::coreState() {
         const bool connected = !::connect(fd,reinterpret_cast<const sockaddr*>(&address),sizeof(address)) &&
                                ::recv(fd,&ready,1,0)==1 && ready==1;
         close(fd);
-        if(connected) return "running";
-        return "starting";
+        return connected ? "running" : noBackend;
     }
     if (!actual.empty() && actual!="connected" && actual!="disconnected" && actual!="connecting") return actual;
-    if (!requested() && actual=="connected") return "running";
     return requested() ? "starting" : "stopped";
 }
 std::string Core::saveConfig(std::string json) {
