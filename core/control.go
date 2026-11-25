@@ -73,8 +73,8 @@ func newControl(s *policySession, dir string) (*control, error) {
 	c.ctx, c.cancel = context.WithCancel(context.Background())
 	return c, nil
 }
-// Runtime sockets must stay out of /data. Vega syncs that tree during package updates.
-const socketDir = "/cache/iori-mihomo"
+// Vega syncs /data and /cache during updates. Keep sockets in package-scoped scratch space.
+const socketDir = "/scratch/iori-mihomo"
 
 func (p *policySession) startControl() error {
 	c := p.management

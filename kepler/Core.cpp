@@ -117,7 +117,7 @@ std::string Core::manage(std::string request) {
     if (fd < 0) return failure;
     sockaddr_un address{};
     address.sun_family = AF_UNIX;
-    const char* path = "/cache/iori-mihomo/management.sock";
+    const char* path = "/scratch/iori-mihomo/management.sock";
     std::strncpy(address.sun_path, path, sizeof(address.sun_path)-1);
     timeval timeout{2,0};
     setsockopt(fd,SOL_SOCKET,SO_RCVTIMEO,&timeout,sizeof(timeout));
@@ -242,7 +242,7 @@ std::string Core::coreState() {
         if (fd < 0) return noBackend;
         sockaddr_un address{};
         address.sun_family = AF_UNIX;
-        const char* path="/cache/iori-mihomo/vpn-ready.sock";
+        const char* path="/scratch/iori-mihomo/vpn-ready.sock";
         std::strncpy(address.sun_path,path,sizeof(address.sun_path)-1);
         timeval timeout{0,300000};
         setsockopt(fd,SOL_SOCKET,SO_RCVTIMEO,&timeout,sizeof(timeout));
