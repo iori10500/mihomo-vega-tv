@@ -1,5 +1,5 @@
 import React,{useCallback,useEffect,useRef,useState} from 'react';
-import {AppRegistry,BackHandler,Linking,Pressable,Text,TextInput,View,useWindowDimensions} from 'react-native';
+import {AppRegistry,AppState,BackHandler,Linking,Pressable,Text,TextInput,View,useWindowDimensions} from 'react-native';
 import {SecurityManager} from '@amazon-devices/security-manager-lib';
 import {measureMemory} from './memory';
 import Core from './src/NativeCore';
@@ -51,10 +51,17 @@ function App(){
     catch(e){setNote(e.message);}
   },[]);
   useEffect(()=>{
-    if(Core.requested()) SecurityManager.getPrivilegeState(permission).then(x=>{
-      if(x==='ALLOW')return Linking.openURL('pkg://com.iori.mihomo.service');
-    }).catch(e=>setNote(e.message));
-    refresh();const timer=setInterval(refresh,1000);return ()=>clearInterval(timer);
+    function resume() {
+      refresh();
+      if(!Core.requested() || Core.coreState()==='running')return;
+      SecurityManager.getPrivilegeState(permission).then(x=>{
+        if(x==='ALLOW' && Core.requested())return Linking.openURL('pkg://com.iori.mihomo.service');
+      }).catch(e=>setNote(e.message));
+    }
+    resume();
+    const listener=AppState.addEventListener('change',next=>{if(next==='active')resume();});
+    const timer=setInterval(refresh,1000);
+    return ()=>{clearInterval(timer);listener.remove();};
   },[refresh]);
   useEffect(()=>{if(state==='running'&&report)console.info('MihomoTV routing '+report);},[state,report]);
   function back(){if(servicePage){setServicePage(false);setNote('');return true;}if(!edit)return false;if(!busy.current){setEdit(false);setUrl('');setNote('');}return true;}

@@ -7,6 +7,7 @@
 #include <apmf/iface/com/amazon/kepler/net/vpn/wireguard/WgPeerConfig.h>
 #include <apmf/iface/com/amazon/kepler/net/vpn/wireguard/WgConfig.h>
 #include <chrono>
+#include <cstring>
 #include <apmf/apmf_base.h>
 #include <apmf/iface/com/amazon/kepler/net/vpn/vpnmanager/IVpnEventListener.h>
 #include <apmf/iface/com/amazon/kepler/net/vpn/common/VpnEventData.h>
@@ -46,12 +47,63 @@ private:
 apmf::Ptr<VpnManager> manager;
 apmf::Ptr<Events> events;
 bool ownsInterface = false;
+WgKey ownedPeer{};
+
+bool matchesLocalPeer(const apmf::Ptr<systemvpn::VpnConfig>& config, const std::string& previousPeer, bool legacy) {
+    if (!config || config->vpnType() != systemvpn::VpnType::WG) return false;
+    auto vpn = config.QueryInterface<wg::WgVpnConfig>();
+    if (!vpn) return false;
+    auto wgConfig = vpn->wgConfig();
+    if (!wgConfig) return false;
+    auto peers = wgConfig->peerConfigs();
+    if (peers.size() != 1 || !peers[0]) return false;
+    auto peer = peers[0];
+    auto key = peer->pubKey();
+    if (key.size() != ownedPeer.size()) return false;
+    if (!previousPeer.empty()) {
+        return key.size() == previousPeer.size() && std::memcmp(key.data(), previousPeer.data(), key.size()) == 0;
+    }
+    if (!legacy) return false;
+    // Old builds used a single loopback peer. The caller already holds that UDP port.
+    auto iface = wgConfig->ifConfig();
+    if (!iface || peer->epType() != wg::WgEndpointType::IP || peer->listenPort() != 17892) return false;
+    auto endpoint = peer->epIp();
+    auto address = iface->ip();
+    const std::string ip(address.data(), address.size());
+    return std::string(endpoint.data(), endpoint.size()) == "127.0.0.1" &&
+           (ip == "10.203.77.2" || ip == "10.203.77.2/32");
 }
+
+void stopAndWait() {
+    manager->stopVpn();
+    const auto until = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+    do {
+        if (!manager->getVpnConfig()) return;
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    } while (std::chrono::steady_clock::now() < until);
+    throw std::runtime_error("系统仍在释放 VPN 接口，请稍后重试");
+}
+}
+
+std::string prepareSystemVpn(const std::string& previousPeer, bool legacyProfile) {
+    try {
+        manager = apmf::GetProcessObject()->getComponent("/com.amazon.kepler.net.vpn.vpnmanager").QueryInterface<VpnManager>();
+        auto config = manager->getVpnConfig();
+        if (!config) return "";
+        if (!matchesLocalPeer(config, previousPeer, legacyProfile)) {
+            return "已有其他 VPN 配置，请在电视设置中确认并断开后重试";
+        }
+        stopAndWait();
+        return "";
+    } catch (const std::exception& e) {return std::string("恢复旧 VPN 接口失败：")+e.what();}
+}
+
 std::string stopSystemVpn() {
     if (!manager) return "";
     try {
         if (ownsInterface) {
-            manager->stopVpn();
+            const std::string expected(reinterpret_cast<const char*>(ownedPeer.data()), ownedPeer.size());
+            if (matchesLocalPeer(manager->getVpnConfig(), expected, false)) stopAndWait();
             ownsInterface=false;
         }
         if(events) {manager->removeVpnEventListener(); events=nullptr;}
@@ -59,10 +111,8 @@ std::string stopSystemVpn() {
     } catch (const std::exception& e) {return std::string("停止系统 VPN 失败：")+e.what();}
 }
 std::string startSystemVpn(const WgKey& localPrivate,const WgKey& localPublic,const WgKey& peerPublic) {
-    const char* step = "获取 VPN 系统接口";
+    const char* step = "读取 VPN 配置";
     try {
-        manager=apmf::GetProcessObject()->getComponent("/com.amazon.kepler.net.vpn.vpnmanager").QueryInterface<VpnManager>();
-        step = "读取 VPN 配置";
         if (manager->getVpnConfig()) return "电视上已有活动的 VPN 配置";
         step = "订阅 VPN 连接事件";
         auto listener = apmf::Ptr<Events>::Make();
@@ -89,6 +139,7 @@ std::string startSystemVpn(const WgKey& localPrivate,const WgKey& localPublic,co
         vpn->wgConfig(settings->build().QueryInterface<wg::WgConfig>());
         step = "创建 VPN";
         manager->createVpn(vpn->build().QueryInterface<wg::WgVpnConfig>());
+        ownedPeer=peerPublic;
         ownsInterface=true;
         step = "等待 VPN 接口";
         if (!events->wait(Event::IF_UP,Event::CREATE_FAILURE)) throw std::runtime_error("接口未就绪");

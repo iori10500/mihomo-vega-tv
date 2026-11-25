@@ -4,6 +4,7 @@
 #include <string>
 namespace mihomotv {
 using WgKey = std::array<uint8_t,32>;
+std::string prepareSystemVpn(const std::string& previousPeer, bool legacyProfile);
 std::string startSystemVpn(const WgKey& localPrivate,const WgKey& localPublic,const WgKey& peerPublic);
 std::string stopSystemVpn();
 }

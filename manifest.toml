@@ -3,7 +3,7 @@ schema-version = 1
 [package]
 id = "com.iori.mihomo"
 title = "Mihomo"
-version = "0.4.0"
+version = "0.4.1"
 
 [os.version]
 min = "2.0"

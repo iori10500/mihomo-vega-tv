@@ -189,7 +189,16 @@ std::string Core::startCore() {
     if (startLocal(localPrivate.data(),localPublic.data(),peerPublic.data())) {
         vpnError = "启动本地 WireGuard 转发失败";
     } else {
-        vpnError = startSystemVpn(localPrivate,localPublic,peerPublic);
+        const auto ownerFile = directory + "/vpn-peer.pub";
+        // 0.4.0 promoted config.json only after the first successful connection.
+        const bool legacyProfile = access(ownerFile.c_str(), F_OK) != 0 && errno == ENOENT &&
+                                   access(config.c_str(), R_OK) == 0;
+        vpnError = prepareSystemVpn(readFile(ownerFile), legacyProfile);
+        if (vpnError.empty()) {
+            // Persist only the public identity, before the asynchronous create request.
+            vpnError = storeFile(ownerFile, std::string(reinterpret_cast<const char*>(peerPublic.data()), peerPublic.size()));
+        }
+        if (vpnError.empty()) vpnError = startSystemVpn(localPrivate,localPublic,peerPublic);
     }
     explicit_bzero(localPrivate.data(),localPrivate.size());
     if (!vpnError.empty()) {
