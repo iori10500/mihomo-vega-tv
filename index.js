@@ -67,7 +67,7 @@ function App(){
     return ()=>{clearInterval(timer);listener.remove();};
   },[refresh]);
   useEffect(()=>{if(state==='running'&&report)console.info('MihomoTV routing '+report);},[state,report]);
-  function back(){if(servicePage){setServicePage(false);setNote('');return true;}if(!edit)return false;if(!busy.current){setEdit(false);setUrl('');setNote('');}return true;}
+  function back(){if(edit==='privacy'){setEdit(true);return true;}if(servicePage){setServicePage(false);setNote('');return true;}if(!edit)return false;if(!busy.current){setEdit(false);setUrl('');setNote('');}return true;}
   useEffect(()=>{const l=BackHandler.addEventListener('hardwareBackPress',back);return ()=>l.remove();},[edit,servicePage]);
   function request(value){const err=Core.setRequested(value);if(err)throw Error(err);}
   async function disconnect(){
@@ -149,11 +149,25 @@ function App(){
     </View>)}
     <Label size={22*s} color={note?'#ffc591':dim} style={{marginTop:17*s}}>{note||statusCaption+' · 更改对新连接生效'}</Label>
   </View>;
+  if(edit==='privacy')return <View style={body}>
+    <View style={[row,{justifyContent:'space-between',marginBottom:32*s}]}>
+      <Label size={48*s} bold>隐私政策</Label>
+      <Tile s={s} preferred action={back} style={{paddingHorizontal:25*s,paddingVertical:12*s}}><Label size={24*s}>返回</Label></Tile>
+    </View>
+    {[
+      ['电视上保存什么','订阅链接及访问凭据、节点缓存、分流规则、节点选择和最近出站状态保存在应用数据中。应用根据连接的目标域名和 IP 匹配规则。'],
+      ['谁会收到网络请求','订阅和规则源接收更新请求。代理连接通过你选定的节点转发，直连连接到达目标服务。系统 VPN 接管 IPv4，IPv6 可能直接联网。'],
+      ['DNS 与测速','应用向系统配置 Cloudflare DNS（1.1.1.1）。自动选点与延迟测试会访问 Google gstatic，下载测速会访问 Cloudflare Speed。相关服务可看到请求来源 IP。'],
+      ['管理数据与联系','可随时断开 VPN。清除本应用的存储数据可移除本地配置和缓存。发布者未经营节点服务，应用不向发布者上传浏览记录。隐私咨询可使用商店页面列出的开发者联系方式。'],
+    ].map(([title,detail])=><View key={title} style={{marginBottom:23*s}}>
+      <Label bold size={29*s}>{title}</Label><Label size={24*s} color={dim} style={{marginTop:5*s}}>{detail}</Label>
+    </View>)}
+  </View>;
   if(edit)return <View style={[body,{justifyContent:'center',paddingHorizontal:175*s}]}>
     <Label size={53*s} bold>订阅管理</Label><Label size={26*s} color={dim} style={{marginVertical:28*s}}>粘贴 HTTPS 订阅链接，保存后连接。</Label>
     <TextInput secureTextEntry selectTextOnFocus autoCapitalize="none" autoCorrect={false} value={url} onChangeText={setUrl}
       placeholder="HTTPS 订阅链接" placeholderTextColor={dim} style={{fontSize:30*s,color:white,padding:22*s,borderRadius:12*s,backgroundColor:panel,borderWidth:2*s,borderColor:line}}/>
-    <View style={[row,{marginVertical:27*s}]}>{[[working?'正在连接…':'保存并连接',()=>act(save)],['返回',back]].map(([label,fn],i)=><Tile key={i} preferred={!i} s={s} action={fn} style={{paddingHorizontal:24*s,paddingVertical:15*s,marginRight:16*s}}><Label bold size={26*s}>{label}</Label></Tile>)}</View>
+    <View style={[row,{marginVertical:27*s}]}>{[[working?'正在连接…':'保存并连接',()=>act(save)],['隐私政策',()=>setEdit('privacy')],['返回',back]].map(([label,fn],i)=><Tile key={i} preferred={!i} s={s} action={fn} style={{paddingHorizontal:24*s,paddingVertical:15*s,marginRight:16*s}}><Label bold size={26*s}>{label}</Label></Tile>)}</View>
     {!!note&&<Label size={25*s} color="#ffc591">{note}</Label>}
   </View>;
   return <View style={body}>

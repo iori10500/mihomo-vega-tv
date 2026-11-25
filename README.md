@@ -13,6 +13,8 @@
 
 0.4.1 增加了后台恢复。电视保留了上次的本地 VPN 接口时，再次连接会核对已保存的 WireGuard 对端公钥，释放旧接口后重新连接。从 0.4.0 升级的设备会按旧版的本地端点、端口和接口地址识别旧连接。已启用 VPN 的用户返回应用时会唤起退出的后台服务。升级后如需重新授权，在首页按确定键连接，然后在电视的系统提示中选择「允许」。
 
+[隐私政策 / Privacy policy](PRIVACY.md)
+
 ## 构建和侧载
 
 本项目的交叉编译脚本面向 Apple Silicon macOS，需 Amazon Vega SDK 2.0.15159、Node.js/npm、Python 3、Git 和 Go **1.26.11**。Go 版本固定是因为该构建含有 ARMv7 共享库入口的栈对齐修正。按 Amazon 的 [Vega SDK 文档](https://developer.amazon.com/docs/vega/latest/overview.html) 安装并激活 SDK，确保其 bin 目录中的 vega 可用。
@@ -51,3 +53,5 @@ vega device install-app -d DEVICE_SERIAL -p build/armv7-release/mihomo-tv_armv7.
 ## 上游与许可证
 
 自有源码采用 GPL-3.0-only。核心来自 [MetaCubeX/mihomo](https://github.com/MetaCubeX/mihomo)，固定在 v1.19.34。服务和地区数据来自 [meta-rules-dat](https://github.com/MetaCubeX/meta-rules-dat)。规则文件的来源、固定版本和 SHA-256 见 [Rule-sources.txt](assets/raw/Rule-sources.txt)。腾讯视频规则使用视频服务的域名事实，参考来源列于同一文件。Amazon SDK 由开发者自行安装，遵循其许可条款。节点和规则订阅由使用者自行提供。
+
+商店构建的编号在 package.json 的 package:vega 脚本中设置。首次送审使用 1，后续上传的更新应递增。构建时将依赖声明打入 assets/raw/Third-party-notices.txt。

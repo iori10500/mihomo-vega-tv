@@ -14,7 +14,8 @@ cd "$work"
 cp "$project"/core/*.go .
 cp "$MIHOMO_SOURCE/go.mod" go.mod
 cp "$MIHOMO_SOURCE/go.sum" go.sum
-go mod edit -module=firetv.local/mihomo-bridge -require=github.com/metacubex/mihomo@v0.0.0 -replace="github.com/metacubex/mihomo=$MIHOMO_SOURCE"
+ln -s "$MIHOMO_SOURCE" upstream
+go mod edit -module=firetv.local/mihomo-bridge -require=github.com/metacubex/mihomo@v0.0.0 -replace=github.com/metacubex/mihomo=./upstream
 if [ "${1:-}" = "--test" ]; then
     ln -s "$project/assets" assets
     go test -mod=mod -tags 'netgo osusergo' .
@@ -48,3 +49,4 @@ go build -overlay="$work/overlay.json" -mod=mod -tags 'netgo osusergo' -buildmod
 test -s "$work/libtvcore.so"
 install -m 0644 "$work/libtvcore.so" "$project/native/libtvcore.so"
 install -m 0644 "$MIHOMO_SOURCE/LICENSE" "$project/assets/raw/Mihomo-LICENSE"
+python3 "$project/tools/package_notices.py" "$project"

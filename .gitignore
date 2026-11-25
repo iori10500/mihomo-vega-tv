@@ -9,3 +9,4 @@ buildinfo.json
 *.log
 .env*
 .DS_Store
+assets/raw/Third-party-notices.txt
