@@ -73,9 +73,15 @@ func newControl(s *policySession, dir string) (*control, error) {
 	c.ctx, c.cancel = context.WithCancel(context.Background())
 	return c, nil
 }
+// Runtime sockets must stay out of /data. Vega syncs that tree during package updates.
+const socketDir = "/cache/iori-mihomo"
+
 func (p *policySession) startControl() error {
 	c := p.management
-	path := filepath.Join(c.dir, "management.sock")
+	if err := os.MkdirAll(socketDir, 0700); err != nil {
+		return err
+	}
+	path := filepath.Join(socketDir, "management.sock")
 	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
 		return err
 	}

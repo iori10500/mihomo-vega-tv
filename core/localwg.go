@@ -137,7 +137,7 @@ func TVLocalWGStart(clientPrivate, clientPublic, serverPublic *C.uint8_t) C.int 
 	copy(unsafe.Slice((*byte)(unsafe.Pointer(clientPrivate)), 32), client.Bytes())
 	copy(unsafe.Slice((*byte)(unsafe.Pointer(clientPublic)), 32), client.PublicKey().Bytes())
 	copy(unsafe.Slice((*byte)(unsafe.Pointer(serverPublic)), 32), server.PublicKey().Bytes())
-	socketPath := home + "/vpn-ready.sock"
+	socketPath := socketDir + "/vpn-ready.sock"
 	if err = os.Remove(socketPath); err != nil && !os.IsNotExist(err) {
 		wg.Close()
 		st.Close()
