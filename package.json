@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "./build-tv.sh",
-    "package:vega": "react-native build-vega --build-type Release --target armv7 --build-number 2 --build-version 0.4.1"
+    "package:vega": "react-native build-vega --build-type Release --target armv7 --build-number 3 --build-version 0.4.1"
   },
   "dependencies": {
     "@amazon-devices/headless-task-manager": "1.2.9",

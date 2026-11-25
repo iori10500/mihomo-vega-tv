@@ -49,10 +49,24 @@ while records.strip():
         current = current.parent
 
 deps = json.loads((project / "package.json").read_text())["dependencies"]
-for name in sorted(set(deps) | {"@babel/runtime"}):
+# Additional modules present in the Metro source maps for the locked production bundles.
+bundled_js = """
+@amazon-devices/kepler-compatibility-metro-config @babel/runtime
+@react-native/assets-registry @react-native/js-polyfills @react-native/normalize-colors
+@react-native/virtualized-lists abort-controller base64-js deprecated-react-native-prop-types
+event-target-shim invariant memoize-one nullthrows promise prop-types regenerator-runtime
+scheduler stacktrace-parser use-sync-external-store whatwg-fetch
+""".split()
+for name in sorted(set(deps) | set(bundled_js)):
     root = project / "node_modules" / name
     meta = json.loads((root / "package.json").read_text())
-    collect(root, name + " " + meta["version"])
+    label = name + " " + meta["version"]
+    collect(root, label)
+    # These MIT packages refer to the license at their React Native source repository root.
+    if name.startswith("@react-native/") or name == "deprecated-react-native-prop-types":
+        license_file = project / "node_modules/react-native/LICENSE"
+        if not (root / "LICENSE").exists() and meta.get("license") == "MIT":
+            texts[license_file.read_text().strip()].add(label + " / React Native MIT license")
 
 with dest.open("w", encoding="utf-8") as out:
     out.write("Mihomo TV — software notices\nSource and build scripts: https://github.com/iori10500/mihomo-vega-tv\n\n")
