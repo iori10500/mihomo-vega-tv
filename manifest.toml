@@ -4,7 +4,7 @@ schema-version = 1
 id = "com.iori.mihomo"
 title = "Mihomo TV VPN"
 icon = "@image/mihomo-tv.png"
-version = "0.4.1"
+version = "0.4.2"
 
 [os.version]
 min = "2.0"

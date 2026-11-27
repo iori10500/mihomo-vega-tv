@@ -6,6 +6,10 @@
 
 ## 用遥控器操作
 
+0.4.2 新增英文界面。默认跟随电视语言，中文系统显示简体中文，其他系统显示英文。首页的 **English / 中文** 可切换并记住偏好。
+
+On the home screen, choose **English / 中文** to use English, Simplified Chinese, or the TV language. To get started, open **Subscription**, enter your HTTPS subscription URL and choose **Save and connect**. Select **Allow** when the TV requests VPN access.
+
 1. 在「订阅管理」输入自己的 HTTPS 节点订阅，选择「保存并连接」，首次使用时在系统对话框允许 VPN。主页的大按钮控制连接。
 2. 「节点」默认自动选择。列表显示当前节点和最近延迟。打开节点详情可固定节点、测延迟或测下载速度。整组延迟测试并发为二，下载测试通过单个候选节点向 Cloudflare 请求 4 MiB。结果表示该测试端点的响应时间或下载速率。可随时取消。
 3. 「规则 → 视频服务」可设置哔哩哔哩、腾讯视频、爱奇艺、优酷和芒果 TV。规则按服务域名识别。个人规则支持精确域名、域名后缀和 IPv4 网段。远程规则集支持 HTTPS、YAML（payload）、文本和 MRS（domain/ipcidr）。每个源最多下载 4 MiB。连接期间每日检查更新，也可手动更新。
